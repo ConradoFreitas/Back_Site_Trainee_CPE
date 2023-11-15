@@ -5,6 +5,7 @@ class UsuarioController{
         try {
             const usuario = await UsuarioModel.create(req.body);
 
+            const { senha, ...novoUsuario} = usuario.toObject();
             return res.status(200).json(usuario);
         } catch (error){
             res.status(500).json({message: "Erro na criação de usuário", error: error.message });
@@ -22,8 +23,10 @@ class UsuarioController{
     async update(req, res){
         try{
             const { id } = req.params
-            const usuario = await UsuarioModel.findByIdAndUpdate(id, req.body, {new: true});
-            return res.status(200).json(usuario); 
+            const usuarioEncontrado = await UsuarioModel.findById(id);
+
+            if(!usuarioEncontrado) return res.status(404).json({message:"Usuário não encontrado"});
+            return res.status(200).json(usuario);
         } catch (error){
             res.status(500).json({message: "Erro no update de usuário", error: error.message });
         }
@@ -31,13 +34,16 @@ class UsuarioController{
     async delete(req, res){
         try{
             const { id } = req.params
+            const usuarioEncontrado = await UsuarioModel.findById(id);
 
-            await UsuarioModel.findByIdAndDelete(id);
+            if(!usuarioEncontrado) return res.status(404).json({message:"Usuário não encontrado"});
 
-            return res.status(200).json({"menssagem": "Usuario deletado com sucesso."});
-    } catch (error){
-        res.status(500).json({message: "Erro no delete de usuário", error: error.message });
-    }
+            await usuarioEncontrado.deleteOne();
+
+            return res.status(200).json({"menssagem": "Usuário deletado com sucesso."});
+        } catch (error){
+            res.status(500).json({message: "Erro ao apagar usuário", error: error.message });
+        }
     }
 }
 
